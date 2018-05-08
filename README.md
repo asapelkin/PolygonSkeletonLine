@@ -1,5 +1,5 @@
 # PolygonSkeletonLine
-Search spine (skeleton single line) of the polygon straight skeleton / Поиск линии скелета полигона через алгоритм straight skeleton 
+Search spine (skeleton single line) of the polygon  / Поиск линии скелета полигона через алгоритм straight skeleton 
  
  <p align="center">
   <img src="https://raw.githubusercontent.com/asapelkin/PolygonSkeletonLine/master/example1.png" width="350"/>
