@@ -17,7 +17,7 @@ https://www.cgal.org/download
 3) Create enviroment variables
 CGAL_INCLUDEDIR, GMP_INCLUDEDIR, BOOST_INCLUDEDIR, GMP_LIBRARYDIR, CGAL_LIBRARYDIR (throw compiler_config.h here to), BOOST_LIBRARYDIR
 
-4) Change "Additional Dependcies"
+4) Change "Additional Dependencies"
 
 5) Compile
 
