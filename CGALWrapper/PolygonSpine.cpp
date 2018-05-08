@@ -1,62 +1,125 @@
+// CSharpCGAL_Wrapper.cpp : Defines the exported functions for the DLL application.
+//
+
 #include "stdafx.h"
-#include <iostream>
-#include <stdio.h>
+#include "PolygonSpine.h"
 #include "GraphLongestPath.h"
-#include <algorithm>
+
 
 using namespace std;
-using namespace boost;
 
-vector<int> getLongestPath(vector<Edge> graphedges, int n_nodes, int source)
+#include <vector>
+#include <sstream>
+
+#include <boost/shared_ptr.hpp>
+#include <CGAL/Cartesian.h>
+typedef CGAL::Cartesian<float> K;
+
+#include <CGAL/Polygon_2.h>
+#include <CGAL/create_straight_skeleton_2.h>
+
+typedef K::Point_2 Point_2;
+typedef CGAL::Straight_skeleton_2<K> Ss;
+typedef boost::shared_ptr<Ss> SsPtr;
+ 
+#include <boost/geometry.hpp>
+#include <boost/geometry/io/wkt/read.hpp> 
+#include <boost/geometry/geometries/polygon.hpp>
+#include <boost/geometry/geometries/point_xy.hpp>
+ 
+typedef boost::geometry::model::d2::point_xy<double> point_type;
+
+
+string line2wkt(std::map<int, Point_2> nodesById, vector<int> nodes)
 {
-	struct EdgeProperties {
-		int weight;
-	};
-
-	typedef adjacency_list < vecS, vecS, directedS, no_property, EdgeProperties> Graph;
-
-	//vector<Edge> graphedges(graph);
-	//graphedges.reserve(graph.size());
-	//for (const auto& it : graph)
-	//	graphedges.push_back({ it.second, it.first });
-		  
-	int n_edges = graphedges.size();
-//	int n_nodes = nodes.size();
-	vector<int> weights(n_edges, 1);
-		
-	typedef adjacency_list < vecS, vecS, directedS,
-		no_property, EdgeProperties> Graph;
-
-	Graph g(graphedges.data(), graphedges.data() + n_edges, n_nodes);
-
-	graph_traits < Graph >::edge_iterator ei, ei_end;
-	property_map<Graph, int EdgeProperties::*>::type
-		weight_pmap = get(&EdgeProperties::weight, g);
-	int i = 0;
-	for (boost::tie(ei, ei_end) = edges(g); ei != ei_end; ++ei, ++i)
-		weight_pmap[*ei] = weights[i];
-
-	std::vector<int> distance(n_nodes, (std::numeric_limits < short >::max)());
-	std::vector<std::size_t> parent(n_nodes);
-	for (i = 0; i < n_nodes; ++i)
-		parent[i] = i;
-	distance[source] = 0;
-	
-	bool r = bellman_ford_shortest_paths(g, int(n_nodes), weight_map(weight_pmap).distance_map(&distance[0]).predecessor_map(&parent[0]));
-
-	auto farthestDistIt = std::max_element(distance.begin(), distance.end());
-	int farthestNodeInd = std::distance(distance.begin(), farthestDistIt);
-
-	vector<int> longestPath;
-	longestPath.reserve(*farthestDistIt + 1);
-
-	longestPath.push_back(farthestNodeInd);
-	int it = farthestNodeInd;
-	while (it != source)
+	std::ostringstream strs;
+	strs << "LINESTRING (";
+	int iddd = 0;	
+	for (int num : nodes)
 	{
-		it = parent[it];
-		longestPath.push_back(it);
+		Point_2 point = nodesById[num];
+		if (iddd > 0)		
+			strs << "," ;		
+		strs << point.x() << " " << point.y();
+		iddd++;
+	}	 
+	strs << ")";
+	return strs.str();
+}
+ 
+
+std::vector<Point_2> boostPol2CGALPol(const boost::geometry::model::polygon<point_type >& boostPolygon)
+{
+	std::vector<Point_2> cgalPol;
+	for (auto it = boostPolygon.outer().begin() + 1; it < boostPolygon.outer().end(); it++)	
+		cgalPol.push_back(Point_2(it->x(), it->y()));		  
+	return cgalPol;
+}
+
+
+__declspec(dllexport) char* getPolygonSpine(const char* wktPolygon)
+{	
+	string wktPolygonStr(wktPolygon);
+	
+	boost::geometry::model::polygon<point_type> polygon;
+	boost::geometry::read_wkt(wktPolygonStr, polygon);
+	
+	std::vector<Point_2> poly = boostPol2CGALPol(polygon);
+	 
+	SsPtr iss = CGAL::create_interior_straight_skeleton_2(poly.begin(), poly.end(), K());
+ 
+	std::map<Point_2, int> nodesByPoint;
+	std::map<int, Point_2> nodesById; 
+	int id = 0;
+	for (auto i = (*iss).vertices_begin(); i != (*iss).vertices_end(); ++i)  {
+		/*if (i->is_contour())
+			continue;*/
+		nodesByPoint[i->point()] = id;
+		nodesById[id] = i->point();
+		id++;
+	}
+	
+	std::vector<Edge> graph; // @todo размер !!
+	  
+	for (Ss::Halfedge_const_iterator i = (*iss).halfedges_begin(); i != (*iss).halfedges_end(); ++i)  {
+		 
+		if (i->is_border()) // пропускаем рёбра, примыкающие к границе полигона
+			continue;
+		if (i->opposite()->is_border())
+			continue;
+
+		int firstId = nodesByPoint[i->vertex()->point()];
+		int secondId = nodesByPoint[i->opposite()->vertex()->point()];
+
+		Edge edge(firstId, secondId);
+		graph.push_back(edge); 
 	} 
 
-	return longestPath;
+	vector<int> longestPath;
+	for (auto it = nodesByPoint.begin(); it != nodesByPoint.end(); it++)
+	{
+		vector<int> curPath = getLongestPath(graph, nodesByPoint.size(), it->second);
+
+		if (curPath.size() > longestPath.size())
+			longestPath = curPath;
+	}
+		
+	string linestr = line2wkt(nodesById, longestPath);
+
+	
+
+	// strcpy(resLine, linestr.c_str());
+
+	char * resLine =  new char[linestr.length() + 1];
+	 
+	strcpy(resLine, linestr.c_str()); 
+
+	return resLine;
+
+	cout << "GEOMETRYCOLLECTION(" << endl;
+	cout << wktPolygon << "," << endl;
+	cout << resLine << endl;
+	cout << ")" << endl;
 }
+ 
+
