@@ -1,11 +1,12 @@
 # PolygonSkeletonLine
-Search line of the skeleton of the polygon straight skeleton / Поиск линии скелета полигона через алгоритм straight skeleton 
+Search spine (skeleton single line) of the polygon straight skeleton / Поиск линии скелета полигона через алгоритм straight skeleton 
+ 
+ <p align="center">
+  <img src="https://raw.githubusercontent.com/asapelkin/PolygonSkeletonLine/master/example1.png" width="350"/>
+  <img src="https://raw.githubusercontent.com/asapelkin/PolygonSkeletonLine/master/example2.png" width="350"/>
+</p>
 
-![alt text](https://raw.githubusercontent.com/asapelkin/PolygonSkeletonLine/master/example2.png)
-
-![alt text](https://raw.githubusercontent.com/asapelkin/PolygonSkeletonLine/master/example1.png)
-
-
+ 
 Notice: this project is for Windows, but can be easily ported.
 
 1) Install CGAL 
