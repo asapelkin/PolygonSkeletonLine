@@ -3,25 +3,72 @@
 #include <stdio.h>
 #include "GraphLongestPath.h"
 #include <algorithm>
+#include <stdexcept>
 
 using namespace std;
 using namespace boost;
 
-vector<int> getLongestPath(vector<Edge> graphedges, int n_nodes, int source)
+// Поиск максимально удалённых друг от друга узлов графа
+vector<int> getLongestPath(const vector<Edge>& graphedges, int n_nodes, int source)
 {
 	struct EdgeProperties {
 		int weight;
 	};
 
-	typedef adjacency_list < vecS, vecS, directedS, no_property, EdgeProperties> Graph;
+	/*cout << endl;
+	cout << endl;
+	cout << endl;
+	cout << endl;
+	cout << endl;
+	cout << endl;
+	cout << endl;
+	cout << endl;
+	cout << endl;
+	cout << endl;
+	cout << endl;
+	cout << endl;
+	for (const auto& edge : graphedges)
+	{
+		if (edge.first == 127 || edge.second == 127)
+		{
+			cout << "127" << endl;
+		}
+	}
 
-	//vector<Edge> graphedges(graph);
-	//graphedges.reserve(graph.size());
-	//for (const auto& it : graph)
-	//	graphedges.push_back({ it.second, it.first });
-		  
+	for (const auto& edge : graphedges)
+	{
+		if (edge.first == 128 || edge.second == 128)
+		{
+			cout << "128" << endl;
+		}
+	}
+
+	for (const auto& edge : graphedges)
+	{
+		if (edge.first == 126 || edge.second == 126)
+		{
+			
+			cout << "126" << endl;
+		}
+	}
+
+	cout << endl;
+	cout << endl;
+	cout << endl;
+	cout << endl;
+	cout << endl;
+	cout << endl;
+	cout << endl;
+	cout << endl;
+	cout << endl;
+	cout << endl;
+	cout << endl;
+	cout << endl;
+*/
+
+	typedef adjacency_list < vecS, vecS, directedS, no_property, EdgeProperties> Graph;
+	 		  
 	int n_edges = graphedges.size();
-//	int n_nodes = nodes.size();
 	vector<int> weights(n_edges, 1);
 		
 	typedef adjacency_list < vecS, vecS, directedS,
@@ -42,7 +89,18 @@ vector<int> getLongestPath(vector<Edge> graphedges, int n_nodes, int source)
 		parent[i] = i;
 	distance[source] = 0;
 	
-	bool r = bellman_ford_shortest_paths(g, int(n_nodes), weight_map(weight_pmap).distance_map(&distance[0]).predecessor_map(&parent[0]));
+	bool r;
+		
+	try	{
+		r = bellman_ford_shortest_paths(g, int(n_nodes), weight_map(weight_pmap).distance_map(&distance[0]).predecessor_map(&parent[0]));
+	}
+	catch (std::exception)
+	{
+		throw std::runtime_error("Error in the search path of the graph");
+	}
+
+	if (!r)
+		throw std::runtime_error("Error in the search path of the graph");
 
 	auto farthestDistIt = std::max_element(distance.begin(), distance.end());
 	int farthestNodeInd = std::distance(distance.begin(), farthestDistIt);
