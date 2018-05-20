@@ -75,7 +75,6 @@ string line2wkt(const std::map<int, Point_2>& nodesById, const vector<int>& node
 }
  
 
-/// препроцессинг полигона. Приведение его к подходящему виду
 void preprocPolygon(BoostPolygon& polygon)
 {
 	BoostPolygon res;
@@ -102,9 +101,6 @@ void preprocPolygon(BoostPolygon& polygon)
 }
 
 
-
-
-
 __declspec(dllexport) char* getPolygonSpine(const char* wktPolygon)
 {	 
 	string wktPolygonStr(wktPolygon);
@@ -127,12 +123,14 @@ __declspec(dllexport) char* getPolygonSpine(const char* wktPolygon)
 		throw std::runtime_error("Error in the straigh skeleton algorithm");
 	}
  
-	//cout << skeleton2wkt(iss) << endl;	
-
 	std::map<Point_2, int> nodesByPoint;
 	std::map<int, Point_2> nodesById; 
 	int id = 0;
-	for (auto i = (*iss).vertices_begin(); i != (*iss).vertices_end(); ++i)  {
+	for (auto i = (*iss).vertices_begin(); i != (*iss).vertices_end(); ++i)  {		
+		// если точка граничная (принадлежит полигону), то отбрасываем её
+		if (find(poly.begin(), poly.end(), i->point()) != poly.end())
+			continue;
+		
 		nodesByPoint[i->point()] = id;
 		nodesById[id] = i->point();
 		id++;
@@ -140,10 +138,10 @@ __declspec(dllexport) char* getPolygonSpine(const char* wktPolygon)
 	
 	std::vector<Edge> graph; // @todo размер !!
 	  
-	for (StraightSkeleton::Halfedge_const_iterator i = (*iss).halfedges_begin(); i != (*iss).halfedges_end(); ++i)  {
-		if (i->is_border()) // пропускаем рёбра, примыкающие к границе полигона
-			continue;
-		if (i->opposite()->is_border())
+	for (StraightSkeleton::Halfedge_const_iterator i = (*iss).halfedges_begin(); i != (*iss).halfedges_end(); ++i)  {	 
+
+		if (!nodesByPoint.count(i->vertex()->point()) 
+		 || !nodesByPoint.count(i->opposite()->vertex()->point()))
 			continue;
 
 		int firstId = nodesByPoint[i->vertex()->point()];
@@ -151,7 +149,30 @@ __declspec(dllexport) char* getPolygonSpine(const char* wktPolygon)
 
 		Edge edge(firstId, secondId);
 		graph.push_back(edge);
-	} 
+
+	}
+	
+	cout << "GEOMETRYCOLLECTION(" << endl;
+	cout << wktPolygon << "," << endl;
+ 
+	cout << "MULTILINESTRING (";
+	bool flag = true;
+	for (const auto& edge : graph)
+	{
+	if (flag)
+	flag = false;
+	else
+	cout << ",";
+
+	auto p1 = nodesById[edge.first];
+	auto p2 = nodesById[edge.second];
+
+	cout << "(" << p1.x() << "  " << p1.y() << ",   " << p2.x() << "  " << p2.y() << ")" << endl;
+
+	}
+	cout << ")";
+ 
+	cout << ")" << endl;
 
 	vector<int> longestPath;
 	for (auto it = nodesByPoint.begin(); it != nodesByPoint.end(); it++)
@@ -167,18 +188,31 @@ __declspec(dllexport) char* getPolygonSpine(const char* wktPolygon)
 	char * resLine =  new char[linestr.length() + 1];
 	 
 	strcpy(resLine, linestr.c_str()); 
-	/*
+
+	
+	
 	cout << "GEOMETRYCOLLECTION(" << endl;
 	cout << wktPolygon << "," << endl;
-	cout << resLine << endl;
-	cout << ")" << endl;
+	cout << linestr << endl;
+/*
+	cout << "MULTILINESTRING (";
+	bool flag = true;
+	for (const auto& edge : graph)
+	{
+		if (flag)
+			flag = false;
+		else
+			cout << ",";
 
-	cout << endl;
-	cout << endl;
-	cout << endl;
-	cout << endl;
-	cout << endl;
-	cout << skeleton2wkt(iss) << endl;*/
+		auto p1 = nodesById[edge.first];
+		auto p2 = nodesById[edge.second];
+
+		cout << "(" << p1.x() << "  " << p1.y() << ",   " << p2.x() << "  " << p2.y() << ")" << endl;
+
+	}
+	cout << ")";
+*/
+	cout << ")" << endl;
 
 	return resLine;
 }

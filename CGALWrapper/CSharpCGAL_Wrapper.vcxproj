@@ -100,14 +100,14 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;CSHARPCGAL_WRAPPER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\external\gmp\include;$(SolutionDir)/external/boost_1_67_0/include/;$(SolutionDir)/external/CGAL-4.12/include/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BOOST_INCLUDEDIR);$(CGAL_INCLUDEDIR);$(GMP_INCLUDEDIR);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/Zm212 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)\external\boost_1_67_0\lib;$(SolutionDir)\external\CGAL-4.12\lib;$(SolutionDir)/external/gmp/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>CGAL-vc120-mt-gd-4.12.lib;CGAL_Core-vc120-mt-gd-4.12.lib;libboost_thread-vc120-mt-gd-1_59.lib;libgmp-10.lib;libmpfr-4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(BOOST_LIBRARYDIR);$(CGAL_LIBRARYDIR);$(GMP_LIBRARYDIR);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>CGAL-vc120-mt-gd-4.12.lib;CGAL_Core-vc120-mt-gd-4.12.lib;libboost_thread-vc120-mt-gd-x64-1_67.lib;libgmp-10.lib;libmpfr-4.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

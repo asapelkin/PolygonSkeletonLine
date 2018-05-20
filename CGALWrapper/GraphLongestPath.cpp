@@ -13,58 +13,7 @@ vector<int> getLongestPath(const vector<Edge>& graphedges, int n_nodes, int sour
 {
 	struct EdgeProperties {
 		int weight;
-	};
-
-	/*cout << endl;
-	cout << endl;
-	cout << endl;
-	cout << endl;
-	cout << endl;
-	cout << endl;
-	cout << endl;
-	cout << endl;
-	cout << endl;
-	cout << endl;
-	cout << endl;
-	cout << endl;
-	for (const auto& edge : graphedges)
-	{
-		if (edge.first == 127 || edge.second == 127)
-		{
-			cout << "127" << endl;
-		}
-	}
-
-	for (const auto& edge : graphedges)
-	{
-		if (edge.first == 128 || edge.second == 128)
-		{
-			cout << "128" << endl;
-		}
-	}
-
-	for (const auto& edge : graphedges)
-	{
-		if (edge.first == 126 || edge.second == 126)
-		{
-			
-			cout << "126" << endl;
-		}
-	}
-
-	cout << endl;
-	cout << endl;
-	cout << endl;
-	cout << endl;
-	cout << endl;
-	cout << endl;
-	cout << endl;
-	cout << endl;
-	cout << endl;
-	cout << endl;
-	cout << endl;
-	cout << endl;
-*/
+	};	 
 
 	typedef adjacency_list < vecS, vecS, directedS, no_property, EdgeProperties> Graph;
 	 		  
