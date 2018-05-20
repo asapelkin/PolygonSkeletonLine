@@ -151,29 +151,7 @@ __declspec(dllexport) char* getPolygonSpine(const char* wktPolygon)
 		graph.push_back(edge);
 
 	}
-	
-	cout << "GEOMETRYCOLLECTION(" << endl;
-	cout << wktPolygon << "," << endl;
  
-	cout << "MULTILINESTRING (";
-	bool flag = true;
-	for (const auto& edge : graph)
-	{
-	if (flag)
-	flag = false;
-	else
-	cout << ",";
-
-	auto p1 = nodesById[edge.first];
-	auto p2 = nodesById[edge.second];
-
-	cout << "(" << p1.x() << "  " << p1.y() << ",   " << p2.x() << "  " << p2.y() << ")" << endl;
-
-	}
-	cout << ")";
- 
-	cout << ")" << endl;
-
 	vector<int> longestPath;
 	for (auto it = nodesByPoint.begin(); it != nodesByPoint.end(); it++)
 	{
@@ -189,12 +167,10 @@ __declspec(dllexport) char* getPolygonSpine(const char* wktPolygon)
 	 
 	strcpy(resLine, linestr.c_str()); 
 
-	
-	
+	/*	
 	cout << "GEOMETRYCOLLECTION(" << endl;
 	cout << wktPolygon << "," << endl;
 	cout << linestr << endl;
-/*
 	cout << "MULTILINESTRING (";
 	bool flag = true;
 	for (const auto& edge : graph)
@@ -211,9 +187,8 @@ __declspec(dllexport) char* getPolygonSpine(const char* wktPolygon)
 
 	}
 	cout << ")";
-*/
 	cout << ")" << endl;
-
+	*/
 	return resLine;
 }
  
