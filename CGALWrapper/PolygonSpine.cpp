@@ -9,7 +9,7 @@ using namespace std;
 
 #include <vector>
 #include <sstream>
-
+#include <cmath>E
 #include <boost/shared_ptr.hpp>
 #include <CGAL/Cartesian.h>
 
@@ -152,11 +152,19 @@ __declspec(dllexport) char* getPolygonSpine(const char* wktPolygon)
 
 	}
  
+	vector<double> weights(graph.size());
+
+	for (const auto& edge : graph)
+	{
+		CGAL::Cartesian<float>::Vector_2 vect = nodesById[edge.first] - nodesById[edge.second]; 
+		weights.push_back(fabs(vect.squared_length()));
+	}
+
 	vector<int> longestPath;
 	for (auto it = nodesByPoint.begin(); it != nodesByPoint.end(); it++)
 	{
-		vector<int> curPath = getLongestPath(graph, nodesByPoint.size(), it->second);
-
+		vector<int> curPath = getLongestPath(graph, weights, nodesByPoint.size(), it->second);
+		
 		if (curPath.size() > longestPath.size())
 			longestPath = curPath;
 	}

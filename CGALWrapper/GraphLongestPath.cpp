@@ -9,7 +9,7 @@ using namespace std;
 using namespace boost;
 
 // Поиск максимально удалённых друг от друга узлов графа
-vector<int> getLongestPath(const vector<Edge>& graphedges, int n_nodes, int source)
+vector<int> getLongestPath(const vector<Edge>& graphedges, const vector<double>& weights, int n_nodes, int source)
 {
 	struct EdgeProperties {
 		int weight;
@@ -18,11 +18,7 @@ vector<int> getLongestPath(const vector<Edge>& graphedges, int n_nodes, int sour
 	typedef adjacency_list < vecS, vecS, directedS, no_property, EdgeProperties> Graph;
 	 		  
 	int n_edges = graphedges.size();
-	vector<int> weights(n_edges, 1);
-		
-	typedef adjacency_list < vecS, vecS, directedS,
-		no_property, EdgeProperties> Graph;
-
+			
 	Graph g(graphedges.data(), graphedges.data() + n_edges, n_nodes);
 
 	graph_traits < Graph >::edge_iterator ei, ei_end;
