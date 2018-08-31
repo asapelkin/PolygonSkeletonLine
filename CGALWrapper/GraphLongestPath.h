@@ -10,4 +10,4 @@
 
 typedef std::pair<int, int> Edge;
 
-std::vector<int> getLongestPath(const std::vector<Edge>& graphedges, const std::vector<double>& weights, int n_nodes, int source);
+void  getLongestPath(const std::vector<Edge>& graphedges, const std::vector<double>& weights, int n_nodes, int source, std::list<int>& res, double& resPathLength);

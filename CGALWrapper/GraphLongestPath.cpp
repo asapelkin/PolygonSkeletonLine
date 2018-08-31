@@ -8,11 +8,11 @@
 using namespace std;
 using namespace boost;
 
-// Поиск максимально удалённых друг от друга узлов графа
-vector<int> getLongestPath(const vector<Edge>& graphedges, const vector<double>& weights, int n_nodes, int source)
+// поиск узла, максимально далёкого от <source>
+void getLongestPath(const vector<Edge>& graphedges, const vector<double>& weights, int n_nodes, int source, list<int>& res, double& resPathLength)
 {
 	struct EdgeProperties {
-		int weight;
+		double weight;
 	};	 
 
 	typedef adjacency_list < vecS, vecS, directedS, no_property, EdgeProperties> Graph;
@@ -22,13 +22,13 @@ vector<int> getLongestPath(const vector<Edge>& graphedges, const vector<double>&
 	Graph g(graphedges.data(), graphedges.data() + n_edges, n_nodes);
 
 	graph_traits < Graph >::edge_iterator ei, ei_end;
-	property_map<Graph, int EdgeProperties::*>::type
+	property_map<Graph, double EdgeProperties::*>::type
 		weight_pmap = get(&EdgeProperties::weight, g);
 	int i = 0;
 	for (boost::tie(ei, ei_end) = edges(g); ei != ei_end; ++ei, ++i)
 		weight_pmap[*ei] = weights[i];
 
-	std::vector<int> distance(n_nodes, (std::numeric_limits < short >::max)());
+	std::vector<double> distance(n_nodes, (std::numeric_limits < double >::max)());
 	std::vector<std::size_t> parent(n_nodes);
 	for (i = 0; i < n_nodes; ++i)
 		parent[i] = i;
@@ -48,18 +48,16 @@ vector<int> getLongestPath(const vector<Edge>& graphedges, const vector<double>&
 		throw std::runtime_error("Error in the search path of the graph");
 
 	auto farthestDistIt = std::max_element(distance.begin(), distance.end());
-	int farthestNodeInd = std::distance(distance.begin(), farthestDistIt);
+	int farthestNodeInd = std::distance(distance.begin(), farthestDistIt); 
 
-	vector<int> longestPath;
-	longestPath.reserve(*farthestDistIt + 1);
-
-	longestPath.push_back(farthestNodeInd);
+	res.clear();
+	 
+	res.push_back(farthestNodeInd);
 	int it = farthestNodeInd;
 	while (it != source)
 	{
 		it = parent[it];
-		longestPath.push_back(it);
+		res.push_back(it);
 	} 
-
-	return longestPath;
+	resPathLength = distance[farthestNodeInd];
 }

@@ -1,4 +1,4 @@
-// CSharpCGAL_Wrapper.cpp : Defines the exported functions for the DLL application.
+ï»¿// CSharpCGAL_Wrapper.cpp : Defines the exported functions for the DLL application.
 //
 
 #include "stdafx.h"
@@ -8,8 +8,10 @@
 using namespace std;
 
 #include <vector>
+#include <list>
 #include <sstream>
-#include <cmath>E
+#define _USE_MATH_DEFINES
+#include <cmath>
 #include <boost/shared_ptr.hpp>
 #include <CGAL/Cartesian.h>
 
@@ -41,7 +43,7 @@ string skeleton2wkt(boost::shared_ptr<const StraightSkeleton> skeleton)
 	strs << "MULTILINESTRING ("; 
 	bool flag = true;
 	for (StraightSkeleton::Halfedge_const_iterator i = (*skeleton).halfedges_begin(); i != (*skeleton).halfedges_end(); ++i)  {
-		if (i->is_border()) // ïðîïóñêàåì ð¸áðà, ïðèìûêàþùèå ê ãðàíèöå ïîëèãîíà
+		if (i->is_border()) // Ð¿Ñ€Ð¾Ð¿ÑƒÑÐºÐ°ÐµÐ¼ Ñ€Ñ‘Ð±Ñ€Ð°, Ð¿Ñ€Ð¸Ð¼Ñ‹ÐºÐ°ÑŽÑ‰Ð¸Ðµ Ðº Ð³Ñ€Ð°Ð½Ð¸Ñ†Ðµ Ð¿Ð¾Ð»Ð¸Ð³Ð¾Ð½Ð°
 			continue;
 		if (i->opposite()->is_border())
 			continue;
@@ -58,15 +60,15 @@ string skeleton2wkt(boost::shared_ptr<const StraightSkeleton> skeleton)
 	return  strs.str();
 }
 
-string line2wkt(const std::map<int, Point_2>& nodesById, const vector<int>& nodes)
+string line2wkt(const std::map<int, Point_2>& nodesById, const list<int>& nodes)
 {
 	std::ostringstream strs;
 	strs << "LINESTRING (";
 	
-	for (int i(0); i < nodes.size(); i++)
+	for (auto it = nodes.begin(); it != nodes.end(); it++)
 	{  
-		const Point_2& point = nodesById.at(nodes[i]);		 
-		if (i != 0)
+		const Point_2& point = nodesById.at(*it);		 
+		if (it != nodes.begin())
 			strs << "," ;		
 		strs << point.x() << " " << point.y();		
 	}	 
@@ -101,13 +103,29 @@ void preprocPolygon(BoostPolygon& polygon)
 }
 
 
+double toRad(double grad)
+{
+	return  grad / 180 * M_PI;
+}
+
+double getDistBetweenPoints(Point_2 p1, Point_2 p2)
+{	
+	double p1Lat = toRad(p1.y());
+	double p1Lon = toRad(p1.x());
+	double p2Lat = toRad(p2.y());
+	double p2Lon = toRad(p2.x());
+	 
+	double cosd = sin(p1Lat) *sin(p2Lat) + cos(p1Lat) * cos(p2Lat)*cos(p1Lon - p2Lon);
+	return acos(cosd);
+}
+
 __declspec(dllexport) char* getPolygonSpine(const char* wktPolygon)
-{	 
+{	    
 	string wktPolygonStr(wktPolygon);
 	
 	BoostPolygon polygon;
 	boost::geometry::read_wkt(wktPolygonStr, polygon);
-	 
+	
 	preprocPolygon(polygon);
  
 	std::vector<Point_2> poly = boostPol2CGALPol(polygon);
@@ -127,7 +145,7 @@ __declspec(dllexport) char* getPolygonSpine(const char* wktPolygon)
 	std::map<int, Point_2> nodesById; 
 	int id = 0;
 	for (auto i = (*iss).vertices_begin(); i != (*iss).vertices_end(); ++i)  {		
-		// åñëè òî÷êà ãðàíè÷íàÿ (ïðèíàäëåæèò ïîëèãîíó), òî îòáðàñûâàåì å¸
+		// ÐµÑÐ»Ð¸ Ñ‚Ð¾Ñ‡ÐºÐ° Ð³Ñ€Ð°Ð½Ð¸Ñ‡Ð½Ð°Ñ (Ð¿Ñ€Ð¸Ð½Ð°Ð´Ð»ÐµÐ¶Ð¸Ñ‚ Ð¿Ð¾Ð»Ð¸Ð³Ð¾Ð½Ñƒ), Ñ‚Ð¾ Ð¾Ñ‚Ð±Ñ€Ð°ÑÑ‹Ð²Ð°ÐµÐ¼ ÐµÑ‘
 		if (find(poly.begin(), poly.end(), i->point()) != poly.end())
 			continue;
 		
@@ -136,7 +154,7 @@ __declspec(dllexport) char* getPolygonSpine(const char* wktPolygon)
 		id++;
 	}
 	
-	std::vector<Edge> graph; // @todo ðàçìåð !!
+	std::vector<Edge> graph; // @todo Ñ€Ð°Ð·Ð¼ÐµÑ€ !!
 	  
 	for (StraightSkeleton::Halfedge_const_iterator i = (*iss).halfedges_begin(); i != (*iss).halfedges_end(); ++i)  {	 
 
@@ -152,33 +170,53 @@ __declspec(dllexport) char* getPolygonSpine(const char* wktPolygon)
 
 	}
  
-	vector<double> weights(graph.size());
-
+	vector<double> weights;
+	weights.reserve(graph.size());
+ 
+ 
 	for (const auto& edge : graph)
 	{
-		CGAL::Cartesian<float>::Vector_2 vect = nodesById[edge.first] - nodesById[edge.second]; 
-		weights.push_back(fabs(vect.squared_length()));
-	}
+		//CGAL::Cartesian<float>::Vector_2 vect = nodesById[edge.first] - nodesById[edge.second];  
+		weights.push_back(getDistBetweenPoints(nodesById[edge.first], nodesById[edge.second]));//   fabs(vect.squared_length()));
+	} 
+	
+	
 
-	vector<int> longestPath;
+	list<int> longestPath;
+	double longestPathLength = 0;
+
 	for (auto it = nodesByPoint.begin(); it != nodesByPoint.end(); it++)
-	{
-		vector<int> curPath = getLongestPath(graph, weights, nodesByPoint.size(), it->second);
-		
-		if (curPath.size() > longestPath.size())
+	{ 	 
+		int nodeId = it->second;
+		int neibreCount = std::accumulate(graph.begin(), graph.end(), 0, [nodeId](int i, const Edge& edge){return i + (edge.first == nodeId); });
+		 
+		if (neibreCount > 1)
+			continue;	 
+
+		list<int> curPath;
+		double Length;
+		getLongestPath(graph, weights, nodesByPoint.size(), nodeId, curPath, Length);
+	  
+		if (Length > longestPathLength)
+		{			
+			longestPathLength = Length;
 			longestPath = curPath;
+		}
 	}
-		
+ 
+
 	string linestr = line2wkt(nodesById, longestPath);
 	 
 	char * resLine =  new char[linestr.length() + 1];
 	 
 	strcpy(resLine, linestr.c_str()); 
+	 
 
-	/*	
+	/*
 	cout << "GEOMETRYCOLLECTION(" << endl;
 	cout << wktPolygon << "," << endl;
 	cout << linestr << endl;
+	//cout << "," << endl;
 	cout << "MULTILINESTRING (";
 	bool flag = true;
 	for (const auto& edge : graph)
@@ -196,7 +234,7 @@ __declspec(dllexport) char* getPolygonSpine(const char* wktPolygon)
 	}
 	cout << ")";
 	cout << ")" << endl;
-	*/
+	*/ 
 	return resLine;
 }
  
