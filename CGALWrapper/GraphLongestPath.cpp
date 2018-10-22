@@ -8,17 +8,17 @@
 using namespace std;
 using namespace boost;
 
-// поиск узла, максимально далёкого от <source>
+ 
 void getLongestPath(const vector<Edge>& graphedges, const vector<double>& weights, int n_nodes, int source, list<int>& res, double& resPathLength)
 {
 	struct EdgeProperties {
 		double weight;
-	};	 
+	};
 
 	typedef adjacency_list < vecS, vecS, directedS, no_property, EdgeProperties> Graph;
-	 		  
+
 	int n_edges = graphedges.size();
-			
+
 	Graph g(graphedges.data(), graphedges.data() + n_edges, n_nodes);
 
 	graph_traits < Graph >::edge_iterator ei, ei_end;
@@ -33,31 +33,33 @@ void getLongestPath(const vector<Edge>& graphedges, const vector<double>& weight
 	for (i = 0; i < n_nodes; ++i)
 		parent[i] = i;
 	distance[source] = 0;
-	
+
 	bool r;
-		
-	try	{
+
+	try     {
 		r = bellman_ford_shortest_paths(g, int(n_nodes), weight_map(weight_pmap).distance_map(&distance[0]).predecessor_map(&parent[0]));
 	}
 	catch (std::exception)
 	{
-		throw std::runtime_error("Error in the search path of the graph");
+		throw std::runtime_error("Error in corridor processing");
 	}
 
 	if (!r)
-		throw std::runtime_error("Error in the search path of the graph");
+		throw std::runtime_error("Error in corridor processing");
 
 	auto farthestDistIt = std::max_element(distance.begin(), distance.end());
-	int farthestNodeInd = std::distance(distance.begin(), farthestDistIt); 
+	int farthestNodeInd = std::distance(distance.begin(), farthestDistIt);
 
 	res.clear();
-	 
+
 	res.push_back(farthestNodeInd);
 	int it = farthestNodeInd;
 	while (it != source)
 	{
 		it = parent[it];
 		res.push_back(it);
-	} 
+		if (res.size() > n_nodes)
+			throw std::runtime_error("Error in corridor processing");
+	}
 	resPathLength = distance[farthestNodeInd];
 }
